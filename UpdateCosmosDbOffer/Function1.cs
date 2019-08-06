@@ -9,45 +9,46 @@ namespace UpdateCosmosDbOffer
 {
     public static class Function1
     {
-        
+        // Default values. Use your own.
+        static int MAX_THROUGHPUT_CAPACITY = 10000;
+        static int MIN_THROUGHPUT_CAPACITY = 400;
+        static int MAX_CAPACITY_START_HOUR = 9;
+        static int MIN_CAPACITY_START_HOUR = 18;
+
+        static string CONNECTION_STRING = "YOUR_FULL_CONNECTION_STRING_HERE";
+        static string DATABASE_NAME = "YOUR_DATABASE_NAME";
+        static string CONTAINER_NAME = "YOUR_CONTAINER_OR_COLLECTION_NAME_HERE";
+
         [FunctionName("Function1")]
         public static void Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
         {
-            string ConnectionString = "YOUR_FULL_CONNECTION_STRING_HERE";
-            string DatabaseName = "YOUR_DATABASE_NAME";
-            string ContainerName = "YOUR_CONTAINER_OR_COLLECTION_NAME_HERE";
-
-            // Default values. Use your own.
-            int MAX_THROUGHPUT_CAPACITY = 10000;
-            int MIN_THROUGHPUT_CAPACITY = 400;
-
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
             log.LogInformation($"Current hour: {DateTime.Now.Hour}");
 
-            CosmosClient cosmosClient = new CosmosClient(ConnectionString);
+            CosmosClient cosmosClient = new CosmosClient(CONNECTION_STRING);
 
             // Peak hour RU maximization    
-            if (DateTime.Now.Hour.ToString() == "9")
+            if (DateTime.Now.Hour == MAX_CAPACITY_START_HOUR)
             {
-                log.LogInformation($"Maximizing capacity for database: {0} and container: {1}.", DatabaseName, ContainerName);
-                if (MaximizeContainerOffer(cosmosClient, DatabaseName, ContainerName))
+                log.LogInformation($"Maximizing capacity for database: {0} and container: {1}.", DATABASE_NAME, CONTAINER_NAME);
+                if (MaximizeContainerOffer(cosmosClient, DATABASE_NAME, CONTAINER_NAME))
                 {
-                    log.LogInformation($"Successfully set throughput to {3} RU's for database: {0} and container: {1}.", DatabaseName, ContainerName, MAX_THROUGHPUT_CAPACITY);
+                    log.LogInformation($"Successfully set throughput to {3} RU's for database: {0} and container: {1}.", DATABASE_NAME, CONTAINER_NAME, MAX_THROUGHPUT_CAPACITY);
                 }
             }
 
             // Slow hour minimization
-            if (DateTime.Now.Hour.ToString() == "18")
+            if (DateTime.Now.Hour == MIN_CAPACITY_START_HOUR)
             {
-                log.LogInformation($"Minimizing capacity for database: {0} and container: {1}.", DatabaseName, ContainerName);
-                if(MinimizeContainerOffer(cosmosClient, DatabaseName, ContainerName))
+                log.LogInformation($"Minimizing capacity for database: {0} and container: {1}.", DATABASE_NAME, CONTAINER_NAME);
+                if(MinimizeContainerOffer(cosmosClient, DATABASE_NAME, CONTAINER_NAME))
                 {
-                    log.LogInformation($"Successfully set throughput to {3} RU's for database: {0} and container: {1}.", DatabaseName, ContainerName, MIN_THROUGHPUT_CAPACITY);
+                    log.LogInformation($"Successfully set throughput to {3} RU's for database: {0} and container: {1}.", DATABASE_NAME, CONTAINER_NAME, MIN_THROUGHPUT_CAPACITY);
                 }
             }
 
-            log.LogInformation("Current throughput {0}", GetContainerOffer(cosmosClient, DatabaseName, ContainerName));
+            log.LogInformation("Current throughput {0}", GetContainerOffer(cosmosClient, DATABASE_NAME, CONTAINER_NAME));
         }
 
         public static int GetContainerOffer(CosmosClient client, string databaseName, string containerName)
